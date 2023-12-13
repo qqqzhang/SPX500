@@ -4,6 +4,7 @@ from datetime import date
 import logging
 import argparse
 import collections
+import csv
 
 def calculate_weekly_trend(dataList):
     positive = []  # week start going up and ending positive
@@ -102,28 +103,29 @@ def parsingArgs():
                     Ranges.append(Range(mos[begin], mos[len(mos)-1]))
 
             logging.debug(f"Month looking at: {Ranges}")
-            return Ranges
+            return { "Month": Ranges, "Filename": args.filename }
 
-def gettingData():
-    data_file = args.filename
-
-    print("Reading data from ", data_file)
+def gettingDataCSV(data_file ):
+    logging.debug("Reading data from ", data_file)
 
     if(not os.path.isfile(data_file)):
-        print("Can not locate file ", data_file)
+        logging.error("Can not locate file ", data_file)
         exit(1)
 
-    file = open(data_file, "r")
-    dataLines = file.read()
-    dataList = dataLines.split('\n')
-    dataList.reverse()
-    print("data is ", dataList)
+    with open(data_file, "r") as csv_file:
+        csv_reader = csv.reader(csv_file)
+        sniffer = csv.Sniffer()
+        sample = csv_file.read(1024)
+        csv_file.seek(0)
+        if(sniffer.has_header(sample)):
+            next(csv_reader)
+        dataList = list(csv_reader)
+        dataList.reverse()
+        logging.debug("data is ", dataList)
+    
+        return dataList
 
-    dataList.pop()
-    return dataList
-
-def gettingWeeklyTrend():
-    dataList = gettingData()
+def gettingWeeklyTrend(dataList):
     p, n, r, b, e = calculate_weekly_trend(dataList)
 
     total = len(dataList)/5
@@ -139,4 +141,6 @@ def gettingWeeklyTrend():
 
 
 if __name__ == "__main__":
-    parsingArgs()
+    args = parsingArgs()
+    print(args)
+    data = gettingDataCSV(args["Filename"])
