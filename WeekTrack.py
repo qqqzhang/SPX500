@@ -132,7 +132,7 @@ def gettingWeeklyTrend(dataList):
     print( "Percent of following Moday trend: {:.{}f}%".format( (len(p)+len(n))*100/total, 2))
     print( "Percent of reversing Moday trend: {:.{}f}%".format( len(r)*100/total, 2))
 
-    p_points = np.sum(p);
+    p_points = sum(p);
     for i in range(len(r)):
         if r[i] < 0.00:
             p_points += r[i]
@@ -143,4 +143,6 @@ def gettingWeeklyTrend(dataList):
 if __name__ == "__main__":
     args = parsingArgs()
     print(args)
-    data = gettingDataCSV(args["Filename"])
+ #   data = gettingDataCSV(args["Filename"])
+ #  if args is not None and isinstance(args,dict) and has Month
+ #  getMonthData
