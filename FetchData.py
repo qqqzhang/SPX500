@@ -16,6 +16,8 @@ def flatten_dict(d):
         nv['Volume'] = v['5. volume']
         nv['HL'] = (float(v['2. high']) - float(v['3. low'])) * 100 / float(v['1. open'])
         nv['OC'] = (float(v['4. close']) - float(v['1. open'])) * 100 / float(v['1. open'])
+        nv['HO'] = (float(v['2. high']) - float(v['1. open']) ) * 100 / float(v['1. open'])
+        nv['OL'] = (float(v['3. low']) - float(v['1. open']) ) * 100 / float(v['1. open'])
         items.append(nv)
     return items
 
@@ -29,7 +31,7 @@ def fetch_data(symbol, time_interval):    # fetch_data('MSFT', 'd')
                   "M": "TIME_SERIES_MONTHLY"
                 }
     ticker = symbol.upper()
-    file_path = f"{ticker}_{intervals[time_interval]}_output_table.csv"
+    file_path = f"hist_data/{ticker}_{intervals[time_interval]}_output_table.csv"
     # Check if the file exists
     if os.path.exists(file_path):
         # Get the current time
@@ -62,12 +64,12 @@ def fetch_data(symbol, time_interval):    # fetch_data('MSFT', 'd')
         }
         flat_data = flatten_dict(data[data_fields[intervals[time_interval]]])
     except KeyError:
-        df = pd.read_csv(f"{ticker}_output_table.csv")
+        df = pd.read_csv(file_path)
         flat_data = df.to_dict(orient='records')
         return flat_data
     else:
         df = pd.json_normalize(flat_data)
-        df.to_csv(f"{ticker}_{intervals[time_interval]}_output_table.csv", index=False)
+        df.to_csv(file_path, index=False)
         return flat_data
 
 
@@ -76,4 +78,4 @@ if __name__ == "__main__":
     hist_data = fetch_data(ticker, 'w')
     print(hist_data)
     # Step Save the DataFrame to a CSV file
-    print(f"Table saved to '{ticker}_output_table.csv'")
+    print(f"Table saved to 'hist_data/{ticker}_*_output_table.csv'")
