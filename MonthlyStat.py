@@ -33,8 +33,8 @@ def plot_monthly_array(data,ticker,mx, mn):
     #    arr = arr[arr > nm]
     #    arr = arr[arr < nx] """
     #   calculate adjusted average
-        pavg = np.mean(arr[arr >0 ])
-        navg = np.mean(arr[arr < 0 ])
+        pavg = np.mean(arr[arr >0 ]) if len(arr[arr >0]) > 0 else float('nan')
+        navg = np.mean(arr[arr < 0 ]) if len(arr[arr < 0 ]) > 0 else float('nan')
     #   add value back
     #   arr = np.append(arr, [nm,nx])       
     #   Calculate the mean for up swings

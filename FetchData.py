@@ -22,7 +22,7 @@ def flatten_dict(d):
     return items
 
 def fetch_data(symbol, time_interval):    # fetch_data('MSFT', 'd')
-    apiKey = "7HMUMJ9DCMIOGGK0"
+    apiKey = "4YACG8H1XDKSSW6I"     # "7HMUMJ9DCMIOGGK0"
     intervals = { 'd': "TIME_SERIES_DAILY",
                   'D': "TIME_SERIES_DAILY",
                   'w': "TIME_SERIES_WEEKLY",
@@ -31,7 +31,7 @@ def fetch_data(symbol, time_interval):    # fetch_data('MSFT', 'd')
                   "M": "TIME_SERIES_MONTHLY"
                 }
     ticker = symbol.upper()
-    file_path = f"hist_data/{ticker}_{intervals[time_interval]}_output_table.csv"
+    file_path = f"J:/My Drive/Tech/Python/SPX500/hist_data/{ticker}_{intervals[time_interval]}_output_table.csv"
     # Check if the file exists
     if os.path.exists(file_path):
         # Get the current time
@@ -64,6 +64,7 @@ def fetch_data(symbol, time_interval):    # fetch_data('MSFT', 'd')
         }
         flat_data = flatten_dict(data[data_fields[intervals[time_interval]]])
     except KeyError:
+        print(data["Information"])
         df = pd.read_csv(file_path)
         flat_data = df.to_dict(orient='records')
         return flat_data
