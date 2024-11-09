@@ -28,15 +28,18 @@ def plot_monthly_array(data,ticker,mx, mn):
         arr = np.array(array)
     #   Calculate the mean for up and down month
     #   remove the high and low
-    #    nm =  np.min(arr)
-    #    nx =  np.max(arr)
-    #    arr = arr[arr > nm]
-    #    arr = arr[arr < nx] """
+        nm =  np.min(arr)
+        nx =  np.max(arr)
+        arr = arr[arr > nm] if nm < 0 and len(arr[arr < 0]) > 1 else arr
+        arr = arr[arr < nx] if nx >0 and len(arr[arr > 0]) > 1 else arr
     #   calculate adjusted average
         pavg = np.mean(arr[arr >0 ]) if len(arr[arr >0]) > 0 else float('nan')
         navg = np.mean(arr[arr < 0 ]) if len(arr[arr < 0 ]) > 0 else float('nan')
     #   add value back
-    #   arr = np.append(arr, [nm,nx])       
+        if not nm in arr:
+            arr = np.append(arr, [nm])
+        if not nx in arr:
+            arr = np.append(arr, [nx])       
     #   Calculate the mean for up swings
         uarr = np.array(HO[i])
         nx =  np.max(uarr)
@@ -113,7 +116,7 @@ def plot_monthly(ticker):
     data = plot_monthly_array(df.to_dict(orient='records'), ticker, max_v['diff'], min_v['diff'])
 
 if __name__ == "__main__":
-    ticker = 'alny'
+    ticker = 'anet'
     plt.figure(figsize=(10, 6))
     # Display the plot
     plot_monthly(ticker)
