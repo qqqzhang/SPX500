@@ -7,6 +7,7 @@ from FetchData import fetch_data
 import datetime
 import calendar
 import pandas_market_calendars as mcal
+import settings
 
 # Set a font that supports Chinese characters (e.g., SimHei for Simplified Chinese)
 rcParams['font.sans-serif'] = ['SimHei']  # Use 'SimHei' for Chinese fonts
@@ -16,12 +17,15 @@ def plot_monthly_array(data,ticker,mx, mn):
     items = [[],[],[],[],[],[],[],[],[],[],[],[]]
     HO = [[],[],[],[],[],[],[],[],[],[],[],[]]
     OL = [[],[],[],[],[],[],[],[],[],[],[],[]]
+    LB=[[],[],[],[],[],[],[],[],[],[],[],[]]
+    annots = {}
 
     print(f"{ticker.upper()}:")
     for item in data:
         items[item["month"]-1].append(item['diff'])
         HO[item["month"]-1].append(item['up'])
         OL[item["month"]-1].append(item['down'])
+        LB[item["month"]-1].append(str(item['Date']))
     for i, array in enumerate(items):
         x_values = np.full(len(array), i+1)  # x-values for each array (1, 2, ..., 12)
         r_values = np.random.uniform(-1, 1, x_values.shape) * 0.2
@@ -53,6 +57,9 @@ def plot_monthly_array(data,ticker,mx, mn):
 
     # Plot image
         plt.scatter(x_values + r_values, array, s=6, label=f"{i+1}月 {np.sum(arr > 0)}/{np.sum(arr < 0)}")
+        for index, point in enumerate(x_values + r_values) :
+            k = str(point) +"," + str(array[index])
+            annots[k] = str(LB[i][index])[0:4]
         print(f"\n{i+1}:", end=' ')
         if not np.isnan(pavg):
             plt.text(  i+1, np.max(arr[arr >0 ]) + 5,f'{pavg:.2f}%', color='green', verticalalignment='top', horizontalalignment='center', fontsize=11)
@@ -69,7 +76,6 @@ def plot_monthly_array(data,ticker,mx, mn):
             pos = np.min(arr[arr <0 ]) if len(arr[arr <0 ]) > 0 else 0
             plt.text(  i+0.5, pos -10, f'L{davg:.2f}%',  fontsize=10)
             print(f'/{davg:.2f}%')
-        
     y_limit = max( 20, (mx - mn)/10)
     plt.ylim(mn -y_limit - 10, mx + 20)
 
@@ -84,6 +90,7 @@ def plot_monthly_array(data,ticker,mx, mn):
     plt.axhline(y=5, color='lightgrey', linestyle=':')
     plt.axhline(y=-5, color='lightgrey', linestyle=':')
     plt.axhline(y=0, color='grey', linestyle='--')
+    settings.annot_data = annots
  
 def plot_monthly(ticker):
     stock_monthly = fetch_data(ticker, 'm')
@@ -113,13 +120,30 @@ def plot_monthly(ticker):
     df['down'] = pd.to_numeric(df['OL'])
     max_v = df.max()
     min_v = df.min()
-    data = plot_monthly_array(df.to_dict(orient='records'), ticker, max_v['diff'], min_v['diff'])
+    plot_monthly_array(df.to_dict(orient='records'), ticker, max_v['diff'], min_v['diff'])
+
+def on_hover(sel):
+        # Access attributes of the selected artist
+        ax = sel.artist.axes
+        xdata = sel.target[0]
+        ydata = sel.target[1]
+
+        # Customize annotation text
+        key = f"{xdata},{ydata}"
+        if key in settings.annot_data:
+            sel.annotation.set_text(settings.annot_data[key])
+        else
+            sel.annotation.set_text(f"{ydata:.2f}%")
 
 if __name__ == "__main__":
+    from mplcursors import cursor , HoverMode
     ticker = 'anet'
     plt.figure(figsize=(10, 6))
     # Display the plot
     plot_monthly(ticker)
+    cursor = cursor(hover=HoverMode.Transient)
+    cursor.connect("add", on_hover)
+    
     plt.show(block=True)
 
 

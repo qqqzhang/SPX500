@@ -3,21 +3,36 @@ from datetime import datetime, timedelta
 import pandas as pd
 import requests
 import os
+import json
 
-def flatten_dict(d):
+
+##
+#  import pandas_datareader as web  # only for test data; must be installed with conda or pip
+#  df = web.DataReader('aapl', data_source='yahoo', start='2021-03-09', end='2022-06-13')
+
+def flatten_dict(d, over_writes):
     items = []
     for k, v in d.items():
         nv = {}
-        nv['Date'] = k
-        nv['Open'] = v['1. open']
-        nv['High'] =v['2. high']
-        nv['Low'] = v['3. low']
-        nv['Close']=v['4. close']
-        nv['Volume'] = v['5. volume']
-        nv['HL'] = (float(v['2. high']) - float(v['3. low'])) * 100 / float(v['1. open'])
-        nv['OC'] = (float(v['4. close']) - float(v['1. open'])) * 100 / float(v['1. open'])
-        nv['HO'] = (float(v['2. high']) - float(v['1. open']) ) * 100 / float(v['1. open'])
-        nv['OL'] = (float(v['3. low']) - float(v['1. open']) ) * 100 / float(v['1. open'])
+        if k in over_writes:
+            nv = over_writes[k]
+            nv['Open'] = str(nv['Open'])
+            nv['High'] = str( nv['High'])
+            nv['Low'] = str(nv['Low'])
+            nv['Close']= str(nv['Close'])
+            nv['Volume'] = str(nv['Volume'])
+        else :
+            nv['Date'] = k
+            nv['Open'] = v['1. open']
+            nv['High'] =v['2. high']
+            nv['Low'] = v['3. low']
+            nv['Close']=v['4. close']
+            nv['Volume'] = v['5. volume']
+        
+        nv['HL'] = (float(nv['High']) - float(nv['Low'])) * 100 / float(nv['Open'])
+        nv['OC'] = (float(nv['Close']) - float(nv['Open'])) * 100 / float(nv['Open'])
+        nv['HO'] = (float(nv['High']) - float(nv['Open']) ) * 100 / float(nv['Open'])
+        nv['OL'] = (float(nv['Low']) - float(nv['Open']) ) * 100 / float(nv['Open'])
         items.append(nv)
     return items
 
@@ -27,11 +42,12 @@ def fetch_data(symbol, time_interval):    # fetch_data('MSFT', 'd')
                   'D': "TIME_SERIES_DAILY",
                   'w': "TIME_SERIES_WEEKLY",
                   'W': "TIME_SERIES_WEEKLY",
-                  'm': "TIME_SERIES_MONTHLY",
+                  'm': "TIME_SERIES_MONTHLY",  # : "TIME_SERIES_MONTHLY_ADJUSTED"
                   "M": "TIME_SERIES_MONTHLY"
                 }
     ticker = symbol.upper()
-    file_path = f"J:/My Drive/Tech/Python/SPX500/hist_data/{ticker}_{intervals[time_interval]}_output_table.csv"
+    file_dir= "J:/My Drive/Tech/Python/SPX500/hist_data/"
+    file_path = f"{file_dir}{ticker}_{intervals[time_interval]}_output_table.csv"
     # Check if the file exists
     if os.path.exists(file_path):
         # Get the current time
@@ -60,11 +76,28 @@ def fetch_data(symbol, time_interval):    # fetch_data('MSFT', 'd')
         data_fields = {
             "TIME_SERIES_DAILY": "Daily Time Series",
             "TIME_SERIES_WEEKLY": "Weekly Time Series",
-            "TIME_SERIES_MONTHLY": "Monthly Time Series"
+            "TIME_SERIES_MONTHLY": "Monthly Time Series",
+            "TIME_SERIES_MONTHLY_ADJUSTED": 'Monthly Adjusted Time Series'
         }
-        flat_data = flatten_dict(data[data_fields[intervals[time_interval]]])
+        
+        overwrite_interval = "daily"
+        if intervals[time_interval] == "TIME_SERIES_WEEKLY":
+            overwrite_interval="weekly"
+        elif intervals[time_interval] == "TIME_SERIES_MONTHLY":
+            overwrite_interval="monthly"
+
+        over_writes = {}
+        overwrite_file = f"{file_dir}{overwrite_interval}_over_writes.json"
+        if os.path.exists(overwrite_file):
+            with open(overwrite_file, 'r') as f:
+                dict_overwrites = json.load(f)
+                if dict_overwrites.get(ticker):
+                    over_writes = dict_overwrites.get(ticker)
+        
+        flat_data = flatten_dict(data[data_fields[intervals[time_interval]]], over_writes)
+        
     except KeyError:
-        print(data["Information"])
+        print(data["Information"]) if "Information" in data else print(data)
         df = pd.read_csv(file_path)
         flat_data = df.to_dict(orient='records')
         return flat_data
