@@ -32,18 +32,18 @@ def plot_monthly_array(data,ticker,mx, mn):
         arr = np.array(array)
     #   Calculate the mean for up and down month
     #   remove the high and low
-        nm =  np.min(arr)
-        nx =  np.max(arr)
-        arr = arr[arr > nm] if nm < 0 and len(arr[arr < 0]) > 1 else arr
-        arr = arr[arr < nx] if nx >0 and len(arr[arr > 0]) > 1 else arr
+        # nm =  np.min(arr)
+        # nx =  np.max(arr)
+        # arr = arr[arr > nm] if nm < 0 and len(arr[arr < 0]) > 1 else arr
+        # arr = arr[arr < nx] if nx >0 and len(arr[arr > 0]) > 1 else arr
     #   calculate adjusted average
         pavg = np.mean(arr[arr >0 ]) if len(arr[arr >0]) > 0 else float('nan')
         navg = np.mean(arr[arr < 0 ]) if len(arr[arr < 0 ]) > 0 else float('nan')
-    #   add value back
-        if not nm in arr:
-            arr = np.append(arr, [nm])
-        if not nx in arr:
-            arr = np.append(arr, [nx])       
+    #   add value back if previously removed high and low
+        # if not nm in arr:
+        #     arr = np.append(arr, [nm])
+        # if not nx in arr:
+        #     arr = np.append(arr, [nx])       
     #   Calculate the mean for up swings
         uarr = np.array(HO[i])
         nx =  np.max(uarr)
@@ -124,15 +124,14 @@ def plot_monthly(ticker):
 
 def on_hover(sel):
         # Access attributes of the selected artist
-        ax = sel.artist.axes
         xdata = sel.target[0]
         ydata = sel.target[1]
 
         # Customize annotation text
         key = f"{xdata},{ydata}"
         if key in settings.annot_data:
-            sel.annotation.set_text(settings.annot_data[key])
-        else
+            sel.annotation.set_text(f"{settings.annot_data[key]}:{ydata:.2f}%")
+        else:
             sel.annotation.set_text(f"{ydata:.2f}%")
 
 if __name__ == "__main__":

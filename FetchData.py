@@ -68,13 +68,13 @@ def fetch_data(symbol, time_interval):    # fetch_data('MSFT', 'd')
         print(f"{file_path} does not exist.")
 
     interval = intervals[time_interval]
-    query_string = f"https://www.alphavantage.co/query?function={interval}&symbol={ticker}&apikey={apiKey}"
+    query_string = f"https://www.alphavantage.co/query?function={interval}&symbol={ticker}&apikey={apiKey}&outputsize=full"
     response = requests.get(query_string)
 
     data = response.json()
     try:
         data_fields = {
-            "TIME_SERIES_DAILY": "Daily Time Series",
+            "TIME_SERIES_DAILY": "Time Series (Daily)",
             "TIME_SERIES_WEEKLY": "Weekly Time Series",
             "TIME_SERIES_MONTHLY": "Monthly Time Series",
             "TIME_SERIES_MONTHLY_ADJUSTED": 'Monthly Adjusted Time Series'
