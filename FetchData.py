@@ -36,8 +36,8 @@ def flatten_dict(d, over_writes):
         items.append(nv)
     return items
 
-def fetch_data(symbol, time_interval):    # fetch_data('MSFT', 'd')
-    apiKey = "4YACG8H1XDKSSW6I"     # "7HMUMJ9DCMIOGGK0"
+def fetch_data(symbol, time_interval, passKey ="4YACG8H1XDKSSW6I" ):    # fetch_data('MSFT', 'd')
+    apiKey = passKey
     intervals = { 'd': "TIME_SERIES_DAILY",
                   'D': "TIME_SERIES_DAILY",
                   'w': "TIME_SERIES_WEEKLY",
@@ -108,7 +108,7 @@ def fetch_data(symbol, time_interval):    # fetch_data('MSFT', 'd')
 
 
 if __name__ == "__main__":
-    ticker = 'SPY'
+    ticker = 'alny'
     hist_data = fetch_data(ticker, 'w')
     print(hist_data)
     # Step Save the DataFrame to a CSV file

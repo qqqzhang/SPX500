@@ -9,6 +9,13 @@ import calendar
 import pandas_market_calendars as mcal
 import settings
 
+import cProfile
+import pstats
+
+
+
+
+
 # Set a font that supports Chinese characters (e.g., SimHei for Simplified Chinese)
 rcParams['font.sans-serif'] = ['SimHei']  # Use 'SimHei' for Chinese fonts
 rcParams['axes.unicode_minus'] = False  # Ensure that minus signs are displayed properly
@@ -106,7 +113,7 @@ def plot_monthly(ticker):
     last_trading_day = month_schedule.index[-1]
     last_record_date = datetime.datetime.strptime(stock_monthly[0]['Date'], "%Y-%m-%d")
     # Output result
-    if today < last_trading_day or last_record_date < last_trading_day:
+    if last_trading_day.month == last_record_date.month and (today < last_trading_day or last_record_date < last_trading_day):
         print(f"No, today is not the last trading day of the month, which is {last_trading_day}, removing")
         stock_monthly = stock_monthly[1:]
 
@@ -136,10 +143,14 @@ def on_hover(sel):
 
 if __name__ == "__main__":
     from mplcursors import cursor , HoverMode
-    ticker = 'anet'
+    ticker = 'Xlv'
     plt.figure(figsize=(10, 6))
     # Display the plot
     plot_monthly(ticker)
+#    cProfile.run('plot_monthly(ticker)', 'stats.prof')
+#    p = pstats.Stats('stats.prof')
+#    p.sort_stats('time').print_stats(10)  # Print top 10 most time-consuming functions
+
     cursor = cursor(hover=HoverMode.Transient)
     cursor.connect("add", on_hover)
     

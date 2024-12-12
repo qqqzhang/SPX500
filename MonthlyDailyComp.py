@@ -66,7 +66,7 @@ def plot_monthly_array_daily_compare(data,ticker,month, plot_month):
         settings.annot_data = annots
  
 def plot_monthly_daily_compare(ticker, month):
-    stock_monthly = fetch_data(ticker, 'd')
+    stock_monthly = fetch_data(ticker, 'd', "7HMUMJ9DCMIOGGK0")
     
     # limit data up to the last 10 years
     stock_monthly = stock_monthly[0:10*52*5]
@@ -80,7 +80,7 @@ def plot_monthly_daily_compare(ticker, month):
     df['down'] = pd.to_numeric(df['OL'])
     
     print(f"{ticker.upper()}:")
-    
+
     for imonth in range(1,13):
         filtered_df = df.loc[df["month"] == imonth]
         sorted_df = filtered_df.sort_values(by=["year", "day"], ascending=[True, True])
@@ -100,7 +100,7 @@ def on_hover(sel):
 
 if __name__ == "__main__":
     from mplcursors import cursor , HoverMode
-    ticker = 'tsla'
+    ticker = 'iwm'
     month = 11  # 1 based
     plt.figure(figsize=(12, 8))
     # Display the plot
