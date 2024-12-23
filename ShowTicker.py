@@ -9,7 +9,7 @@ import settings
 # Create a figure and two subplots (1 row, 2 columns)
 plt.figure(figsize=(18, 8))
 
-ticker = 'alny'
+ticker = 'asml'
 # First subplot (1st row, 1st column)
 plt.subplot(1, 2, 1)  # 1 row, 2 columns, subplot 1
 plot_monthly(ticker)
