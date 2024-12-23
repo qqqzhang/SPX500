@@ -46,7 +46,8 @@ def fetch_data(symbol, time_interval, passKey ="4YACG8H1XDKSSW6I" ):    # fetch_
                   "M": "TIME_SERIES_MONTHLY"
                 }
     ticker = symbol.upper()
-    file_dir= "J:/My Drive/Tech/Python/SPX500/hist_data/"
+ #   file_dir= "J:/My Drive/Tech/Python/SPX500/hist_data/"
+    file_dir= "./hist_data/"
     file_path = f"{file_dir}{ticker}_{intervals[time_interval]}_output_table.csv"
     # Check if the file exists
     if os.path.exists(file_path):

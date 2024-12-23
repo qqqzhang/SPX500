@@ -22,7 +22,8 @@ plot_weekly(ticker)
 plt.subplots_adjust(left=0.05, right=0.99)
 plt.subplots_adjust(wspace=0.1, hspace=0)
 
-default_save_dir = "C:/Users/Qun Zhang/OneDrive/Documents/Stock_Charts"
+username = os.environ['USERNAME']
+default_save_dir = f"C:/Users/{username}/OneDrive/Documents/Stock_Charts"
 filepath = f"{default_save_dir}/{ticker.upper()}.png"
 plt.savefig(filepath)
 cursor = cursor(hover=True)
