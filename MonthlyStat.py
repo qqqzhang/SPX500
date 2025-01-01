@@ -67,7 +67,7 @@ def plot_monthly_array(data,ticker,mx, mn):
         for index, point in enumerate(x_values + r_values) :
             k = str(point) +"," + str(array[index])
             annots[k] = str(LB[i][index])[0:4]
-        print(f"\n{i+1}:", end=' ')
+        print(f"\n{i+1}: ({np.sum(arr > 0)}/{np.sum(arr < 0)}, ", end='')
         if not np.isnan(pavg):
             plt.text(  i+1, np.max(arr[arr >0 ]) + 5,f'{pavg:.2f}%', color='green', verticalalignment='top', horizontalalignment='center', fontsize=11)
             print(f'{pavg:.2f}%', end='')
@@ -82,7 +82,8 @@ def plot_monthly_array(data,ticker,mx, mn):
         if not np.isnan(davg):
             pos = np.min(arr[arr <0 ]) if len(arr[arr <0 ]) > 0 else 0
             plt.text(  i+0.5, pos -10, f'L{davg:.2f}%',  fontsize=10)
-            print(f'/{davg:.2f}%')
+            print(f'/{davg:.2f}%', end='')
+        print(')')
     y_limit = max( 20, (mx - mn)/10)
     plt.ylim(mn -y_limit - 10, mx + 20)
 
