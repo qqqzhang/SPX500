@@ -100,7 +100,7 @@ def on_hover(sel):
 
 if __name__ == "__main__":
     from mplcursors import cursor , HoverMode
-    ticker = 'iwm'
+    ticker = 'xlb'
     month = 11  # 1 based
     plt.figure(figsize=(12, 8))
     # Display the plot

@@ -55,7 +55,7 @@ def plot_weekly(ticker):
     plt.legend()
 
 if __name__ == "__main__":
-    ticker = 'cmcsa'
+    ticker = 'anet'
     plt.figure(figsize=(10, 6))
     # Display the plot
     plot_weekly(ticker)

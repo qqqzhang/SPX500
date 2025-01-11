@@ -144,7 +144,7 @@ def on_hover(sel):
 
 if __name__ == "__main__":
     from mplcursors import cursor , HoverMode
-    ticker = 'Xlv'
+    ticker = 'all'
     plt.figure(figsize=(10, 6))
     # Display the plot
     plot_monthly(ticker)
