@@ -23,6 +23,108 @@ def get_up_and_down_avg(sorted_data):
 
     return np.mean(gtz), np.mean(ltz)
 
+ # find the number of trading days between 2 days, inclusive
+def get_num_of_trading_days(start, end):
+    nyse = mcal.get_calendar('NYSE')
+    # Get the schedule for the period
+    date_schedule = nyse.schedule(start_date = start.strftime("%Y-%m-%d") , end_date = end.strftime("%Y-%m-%d"))
+    return date_schedule.shape[0]
+
+def week_of_month(date):
+    """
+    Calculate the week of the month for a given date.
+    A week starts on Monday (ISO-8601 standard).
+    """
+    # First day of the month
+    first_day = date.replace(day=1)
+    
+    # Calculate the day offset from Monday (0=Monday, 6=Sunday)
+    first_weekday = first_day.weekday()
+    
+    # Calculate the week number
+    week_number = (date.day + first_weekday - 1) // 7 + 1
+    
+    return week_number
+
+def weekday_in_nth_week(date, nth_week, weekday):
+    """
+    Find the specific weekday in the nth week of a given month.
+    The week starts on Sunday.
+    
+    Args:
+        year (int): The year (e.g., 2025).
+        month (int): The month (1-12).
+        weekday (int): The day of the week (0=Sunday, ..., 6=Saturday).
+        nth_week (int): The nth week (1-based index).
+    
+    Returns:
+        date: The corresponding date.
+    """
+    # Set the first day of the week to Sunday
+    calendar.setfirstweekday(calendar.SATURDAY)
+    year = date.year
+    month = date.month
+    # Get the calendar matrix for the month
+    calendar_month = calendar.monthcalendar(year, month)
+
+    
+    # Ensure the nth week exists
+    if nth_week > len(calendar_month):
+        print(f"Month {month} in {year} has no {nth_week} weeks, using previous week instead")
+        nth_week -= 1
+    
+    # Get the nth week's list
+    week = calendar_month[nth_week - 1]
+    
+    # Check if the specified weekday exists in the week
+    day = week[weekday]
+    if day == 0:
+        print(f"Week {nth_week} of {calendar.month_name[month]} {year} does not have a {calendar.day_name[weekday]}. using the next week instead")
+        week = calendar_month[nth_week]
+        day = week[weekday]
+
+    # Return the date
+    return datetime.datetime(year, month, day)
+
+# get the list of start dates based on the alignWeek param
+def  get_start_date_list(start, end, algnWk, low_day, upper_day):
+    start_dates = []
+    start_mon = start.month
+    start_day = start.day
+    check_year = low_day.year
+
+    dateToCheck = datetime.datetime(check_year, start_mon, start_day)
+
+    # find the first start inside the day range
+    while( dateToCheck < low_day) :
+        check_year += 1
+        dateToCheck = datetime.datetime(check_year, start_mon, start_day)
+
+    # now adding start days to the list
+    algn_d = ( start.weekday() + 2 ) % 7
+    algn_w = week_of_month(start)
+
+    while(dateToCheck < upper_day):
+        if algnWk :  # need to align with the week day (example, from a Thur as start of range)
+            wk_d = dateToCheck.weekday()
+            if algn_d != wk_d:  # if not same day of week as start date, shift to find the same week day and add that instead
+                start_dates.append( weekday_in_nth_week(dateToCheck,algn_w, algn_d) )
+                """
+                diff_d = wk_d - algn_d
+                if diff_d > 0:  # checked date is after what we are looking for, reduce ( looking for Thu, get Fri)
+                    start_dates.append(dateToCheck - datetime.timedelta(days=diff_d) )
+                else: # before what we are looking for, add days ( looking for Thu, get Tue)
+                    start_dates.append(dateToCheck + datetime.timedelta(days=-diff_d) )
+                """
+            else:
+                start_dates.append(dateToCheck)        
+        else:
+            start_dates.append(dateToCheck)      
+        check_year += 1
+        dateToCheck = datetime.datetime(check_year, start_mon, start_day)
+    
+    return start_dates
+
 def plot_daily_array( data_array, params):
     year_dict = {}
     HO = []
@@ -32,46 +134,64 @@ def plot_daily_array( data_array, params):
     ticker = params["ticker"];
     start = params["start"]
     end = params["end"]
-    start_mon = start.month
-    start_day = start.day
-    print(f"{ticker.upper()}:")
+    algnWk = params["alignWeek"]
 
-  # find the number of trading days
-    nyse = mcal.get_calendar('NYSE')
-    # Get the schedule for the period
-    date_schedule = nyse.schedule(start_date = start.strftime("%Y-%m-%d") , end_date = end.strftime("%Y-%m-%d"))
-    num_trading_days = date_schedule.shape[0]
+    # find the number of trading days
+    num_trading_days = get_num_of_trading_days(start, end)
+
+    # get the list of start dates
+    df = pd.DataFrame(data_array)
+    allDays = df["Date"].to_list()
+
+    startDateList = get_start_date_list(start, end, algnWk, min(allDays), max(allDays))
 
     #filter data
-    current_year = "Empty"
     data = sorted(data_array, key=lambda x: x['Date'])
-    for item in data:          
-        if ( item["month"] == start_mon and item["day"] >= start_day and not year_dict.get(str(item["Date"].year)) ): # start adding data          
+    startDateList.sort()
+    lookFor = startDateList.pop(0)
+
+    for index, item in enumerate(data):          
+        if ( item["Date"] >= lookFor and not year_dict.get(str(item["Date"].year)) ): # found first date, add         
             current_year = str(item["Date"].year)
-            year_dict[current_year] = [item]
-        elif year_dict.get(current_year) and len(year_dict[current_year]) < num_trading_days:
-            year_dict[current_year].append(item)
+            year_dict[current_year] = data[index:index + num_trading_days]
+            if startDateList:
+                lookFor = startDateList.pop(0)
+            else:
+                break
+        
+
+    # Time to plot
+    print(f"{ticker.upper()}:")
     mn = []
     mx = []
+    line_points = []
+ 
+    x_values = list(range(1, num_trading_days+1))  # x-values for each array (1, 2, ..., 12)
     for key in year_dict.keys():
         array = pd.DataFrame(year_dict[key])
-        x_values = list(range(1, len(array)+1))  # x-values for each array (1, 2, ..., 12)
-        y_values = array["Close"].to_list()
-    
+       
+     #   y_values = array["Close"].to_list()
+
+        open_price = array["Open"][0]
+        close_array = np.array(array["Close"].to_list())
+        close_array = (close_array - open_price)*100/open_price    # percentage compare to first open price
+        y_values = np.round(close_array, 2).tolist()
+        line_points.append(y_values)
+        # Plot image
+        plt.scatter(x_values, y_values, s=6, label=f"{key}")
+        """
         arr = np.array(array["Low"].to_list())
-    #   get the high and low
+        get the high and low
         mn.append(np.min(arr))
         mnL = np.mean(arr)/array["Open"][0] -1
         arr = np.array(array["High"])
         mnH = np.mean(arr)/array["Open"][0] -1
         mx.append(np.max(arr))
         open_close = float(array["Close"].tail(1) - array["Open"][0])/array["Open"][0]*100
-
-    # Plot image
-        plt.plot(x_values , y_values, 'o-', label=f"{key}:{open_close:.2f}%  HI/LW vs open {mnH*100:.2f}%/{mnL*100:.2f}%")
+        """       
         for index, point in enumerate(x_values) :
-            k = f"{point}.00,{float(array["Close"][index]):.2f}"
-            annots[k] = f"{array["Date"][index].strftime("%Y-%m-%d")} H:{array["High"][index]} L:{array["Low"][index]} O:{array["Open"][index]} C:{array["Close"][index]}"
+            k = f"{point}.00,{float(y_values[index]):.2f}"
+            annots[k] = f"{array["Date"][index].strftime("%Y-%m-%d")} {y_values[index]:.2f}% H:{array["High"][index]} L:{array["Low"][index]} O:{array["Open"][index]} C:{array["Close"][index]}"
         ### print(f"\n{i+1}: ({np.sum(arr > 0)}/{np.sum(arr < 0)}, ", end='')
         """       if not np.isnan(pavg):
             plt.text(  i+1, np.max(arr[arr >0 ]) + 5,f'{pavg:.2f}%', color='green', verticalalignment='top', horizontalalignment='center', fontsize=11)
@@ -90,13 +210,17 @@ def plot_daily_array( data_array, params):
             print(f'/{davg:.2f}%', end='')
         print(')') 
     y_limit = max( 20, (mx - mn)/10) """
-    plt.ylim( -100, max(mx) + 60)
+    year_list = np.array(line_points)
+    median_column = np.median(year_list, axis=0)
+    plt.plot(x_values , median_column.tolist(), label=f"")
+    plt.ylim( np.min(year_list) -20, np.max(year_list) + 20)
 
     # Step 3: Customize the plot
     plt.title(f"Line Plot of {ticker.upper()} for the past {len(year_dict)} years")
-    plt.xlabel(f'Days from {start.strftime("%m-%d")} to {end.strftime("%m-%d")} ')
-    plt.ylabel('Price')
-    plt.legend(loc='lower center', ncol=3)
+    plt.xlabel(f'Days from {start.strftime("%m-%d")} to {end.strftime("%m-%d")}')
+    plt.text(  np.max(year_list)/2, -30, f'Week Day Aligned: { "Yes" if algnWk else "No"}', color='r', verticalalignment='top', horizontalalignment='center', fontsize=12)
+    plt.ylabel('Price % range')
+    plt.legend(loc='lower center', ncol=10)
 # Draw a horizontal line at y = 0
     """   plt.axhline(y=10, color='lightgrey', linestyle=':')
     plt.axhline(y=-10, color='lightgrey', linestyle=':')
@@ -125,15 +249,22 @@ def plot_date_range(params):
     df['Close'] = pd.to_numeric(df['Close'])
     # filter out the range for current year if has not ended
     filtered_daily_dict = df.to_dict(orient='records')
-    if last_day > today:
-
+    if last_day > today:    # end of range is in the future, so we don't have this year's range, remove the last data from start 
         filtered_daily = df[df['Date'] < start]
         filtered_daily_dict = filtered_daily.to_dict(orient='records')
     # limit data up to the last 10 years
     stock_daily = filtered_daily_dict[0:5*52*10]   
 
-    plot_daily_array( stock_daily, { "ticker" : ticker, "start": start, "end": last_day })
-
+    plot_daily_array( stock_daily, { "ticker" : ticker, "start": start, "end": last_day , "alignWeek": params["alignWeek"] or False})
+ 
+    plt.axhline(0, color='grey', linestyle='-', linewidth=1)
+    plt.axhline(5, color='grey', linestyle='--', linewidth=1, label=f'5%')
+    plt.axhline(-5, color='grey', linestyle='--', linewidth=1, label=f'-5%')
+    plt.axhline(10, color='grey', linestyle='--', linewidth=1, label=f'10%')
+    plt.axhline(-10, color='grey', linestyle='--', linewidth=1, label=f'-10%')
+    plt.axhline(20, color='grey', linestyle='--', linewidth=1, label=f'20%')
+    plt.axhline(-20, color='grey', linestyle='--', linewidth=1, label=f'-20%')
+    
     # Step 4: Plot the mean and standard deviations
     """plt.axvline(mean, color='r', linestyle='-', linewidth=2, label=f'Mean = {mean:.2f}')
     plt.axvline(mean + std_dev, color='b', linestyle='--', linewidth=2, label=f'+1 Std Dev = {mean + std_dev:.2f}')
@@ -167,7 +298,7 @@ def on_hover(sel):
         if key in settings.annot_data:
             sel.annotation.set_text(f"{settings.annot_data[key]}")
         else:
-            sel.annotation.set_text(f"{ydata:.2f}")
+            sel.annotation.set_text(f"{ydata:.2f}%")
         
 if __name__ == "__main__":
     from mplcursors import cursor , HoverMode
@@ -175,6 +306,7 @@ if __name__ == "__main__":
     param["ticker"] = 'anet'
     param["start"] = '2025-1-9'
     param["end"] = '2025-2-17'
+    param["alignWeek"] = True
 
     plt.figure(figsize=(16, 6))
     # Display the plot
