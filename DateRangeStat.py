@@ -3,7 +3,7 @@ import pylab
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from FetchData import fetch_data
+from FetchData import fetch_data_new
 import datetime
 import calendar
 import pandas_market_calendars as mcal
@@ -191,7 +191,8 @@ def plot_daily_array( data_array, params):
         """       
         for index, point in enumerate(x_values) :
             k = f"{point}.00,{float(y_values[index]):.2f}"
-            annots[k] = f"{array["Date"][index].strftime("%Y-%m-%d")} {y_values[index]:.2f}% H:{array["High"][index]} L:{array["Low"][index]} O:{array["Open"][index]} C:{array["Close"][index]}"
+            day_away = array["Date"][index] - array["Date"][0]
+            annots[k] = f"{array["Date"][index].strftime("%Y-%m-%d %a")} +{day_away.days} Days Change:{y_values[index]:.2f}% H:{array["High"][index]} L:{array["Low"][index]} O:{array["Open"][index]} C:{array["Close"][index]}"
         ### print(f"\n{i+1}: ({np.sum(arr > 0)}/{np.sum(arr < 0)}, ", end='')
         """       if not np.isnan(pavg):
             plt.text(  i+1, np.max(arr[arr >0 ]) + 5,f'{pavg:.2f}%', color='green', verticalalignment='top', horizontalalignment='center', fontsize=11)
@@ -238,7 +239,14 @@ def plot_date_range(params):
     # Convert string to datetime
     last_day = datetime.datetime.strptime(end, date_format)
     start = datetime.datetime.strptime(params["start"], "%Y-%m-%d" ) if params["start"] else today
-    sstock_daily = fetch_data(ticker, 'd')
+
+    f_y = today.year - 1
+    f_m = last_day.month
+    f_d = last_day.day
+    f = datetime.datetime(f_y, f_m, f_d)
+    keepFor = (today-f).days - 30
+    fetch_param = { "symbol": ticker, "time_interval": 'd', "keepFor": keepFor}
+    sstock_daily = fetch_data_new(fetch_param)
     df = pd.DataFrame(sstock_daily)
     df["Date"] = pd.to_datetime(df['Date'])
     df["month"] = df["Date"].dt.month
