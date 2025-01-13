@@ -84,7 +84,9 @@ def weekday_in_nth_week(date, nth_week, weekday):
         day = week[weekday]
 
     # Return the date
-    return datetime.datetime(year, month, day)
+    r = datetime.datetime(year, month, day)
+    print(r.strftime("%A"))
+    return r
 
 # get the list of start dates based on the alignWeek param
 def  get_start_date_list(start, end, algnWk, low_day, upper_day):
@@ -101,12 +103,12 @@ def  get_start_date_list(start, end, algnWk, low_day, upper_day):
         dateToCheck = datetime.datetime(check_year, start_mon, start_day)
 
     # now adding start days to the list
-    algn_d = ( start.weekday() + 2 ) % 7
+    algn_d = ( start.weekday() + 2 ) % 7  # Saturday based
     algn_w = week_of_month(start)
 
     while(dateToCheck < upper_day):
         if algnWk :  # need to align with the week day (example, from a Thur as start of range)
-            wk_d = dateToCheck.weekday()
+            wk_d = (dateToCheck.weekday()+ 2 ) % 7  # Saturday based
             if algn_d != wk_d:  # if not same day of week as start date, shift to find the same week day and add that instead
                 start_dates.append( weekday_in_nth_week(dateToCheck,algn_w, algn_d) )
                 """
@@ -148,12 +150,15 @@ def plot_daily_array( data_array, params):
     #filter data
     data = sorted(data_array, key=lambda x: x['Date'])
     startDateList.sort()
+    print(startDateList)
     lookFor = startDateList.pop(0)
 
     for index, item in enumerate(data):          
         if ( item["Date"] >= lookFor and not year_dict.get(str(item["Date"].year)) ): # found first date, add         
             current_year = str(item["Date"].year)
             year_dict[current_year] = data[index:index + num_trading_days]
+            if item["Date"] > lookFor:
+                 print(f"Looking for {lookFor.strftime('%Y-%m-%d')}, Found {year_dict[current_year][0]['Date'].strftime('%Y-%m-%d')} ")
             if startDateList:
                 lookFor = startDateList.pop(0)
             else:
@@ -240,6 +245,8 @@ def plot_date_range(params):
     last_day = datetime.datetime.strptime(end, date_format)
     start = datetime.datetime.strptime(params["start"], "%Y-%m-%d" ) if params["start"] else today
 
+    while start.isoweekday() > 5 : # find the first weekday in case start is on weekend
+        start = start+ datetime.timedelta(days=1) 
     f_y = today.year - 1
     f_m = last_day.month
     f_d = last_day.day
@@ -311,10 +318,10 @@ def on_hover(sel):
 if __name__ == "__main__":
     from mplcursors import cursor , HoverMode
     param = {}
-    param["ticker"] = 'anet'
-    param["start"] = '2025-1-9'
-    param["end"] = '2025-2-17'
-    param["alignWeek"] = True
+    param["ticker"] = 'GLD'
+    param["start"] = '2025-1-12'
+    param["end"] = '2025-2-21'
+    param["alignWeek"] = False
 
     plt.figure(figsize=(16, 6))
     # Display the plot
