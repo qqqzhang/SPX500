@@ -36,7 +36,12 @@ def flatten_dict(d, over_writes):
         items.append(nv)
     return items
 
-def fetch_data(symbol, time_interval, passKey ="4YACG8H1XDKSSW6I" ):    # fetch_data('MSFT', 'd')
+def fetch_data_new(param):
+    default_dict = { "passKey" : "4YACG8H1XDKSSW6I", "keepFor" : 1 }
+    default_dict.update(param)
+    return fetch_data(default_dict["symbol"], default_dict["time_interval"], default_dict["passKey"], default_dict["keepFor"] )
+
+def fetch_data(symbol, time_interval, passKey ="4YACG8H1XDKSSW6I", keepFor = 1 ):    # fetch_data('MSFT', 'd')
     apiKey = passKey
     intervals = { 'd': "TIME_SERIES_DAILY",
                   'D': "TIME_SERIES_DAILY",
@@ -46,8 +51,12 @@ def fetch_data(symbol, time_interval, passKey ="4YACG8H1XDKSSW6I" ):    # fetch_
                   "M": "TIME_SERIES_MONTHLY"
                 }
     ticker = symbol.upper()
- #   file_dir= "J:/My Drive/Tech/Python/SPX500/hist_data/"
-    file_dir= "./hist_data/"
+ #  file_dir= "J:/My Drive/Tech/Python/SPX500/hist_data/"
+ #  Get the current file's absolute path
+    current_file_path = os.path.abspath(__file__)
+    # Get the directory containing the file
+    current_directory = os.path.dirname(current_file_path)
+    file_dir= current_directory + "/hist_data/"
     file_path = f"{file_dir}{ticker}_{intervals[time_interval]}_output_table.csv"
     # Check if the file exists
     if os.path.exists(file_path):
@@ -58,7 +67,7 @@ def fetch_data(symbol, time_interval, passKey ="4YACG8H1XDKSSW6I" ):    # fetch_
         last_modified_time = datetime.fromtimestamp(os.path.getmtime(file_path))
         
         # Calculate the time 24 hours ago
-        time_24_hours_ago = current_time - timedelta(hours=24)
+        time_24_hours_ago = current_time - timedelta(hours=24*keepFor)
         
         # Check if the file was modified within the last 24 hours
         if last_modified_time > time_24_hours_ago:
