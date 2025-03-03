@@ -37,11 +37,11 @@ def flatten_dict(d, over_writes):
     return items
 
 def fetch_data_new(param):
-    default_dict = { "passKey" : "4YACG8H1XDKSSW6I", "keepFor" : 1 }
+    default_dict = { "passKey" : "CWPXMQM12O4J6184", "keepFor" : 1 }
     default_dict.update(param)
     return fetch_data(default_dict["symbol"], default_dict["time_interval"], default_dict["passKey"], default_dict["keepFor"] )
 
-def fetch_data(symbol, time_interval, passKey ="4YACG8H1XDKSSW6I", keepFor = 1 ):    # fetch_data('MSFT', 'd')
+def fetch_data(symbol, time_interval, passKey = "N9A5OUT2ZGS36JAR", keepFor = 1 ):    # fetch_data('MSFT', 'd')
     apiKey = passKey
     intervals = { 'd': "TIME_SERIES_DAILY",
                   'D': "TIME_SERIES_DAILY",

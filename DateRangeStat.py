@@ -80,8 +80,19 @@ def weekday_in_nth_week(date, nth_week, weekday):
     day = week[weekday]
     if day == 0:
         print(f"Week {nth_week} of {calendar.month_name[month]} {year} does not have a {calendar.day_name[weekday]}. using the next week instead")
-        week = calendar_month[nth_week]
-        day = week[weekday]
+        if nth_week < len(calendar_month):  # does not go to next month
+            week = calendar_month[nth_week]
+            day = week[weekday]
+        else:
+            month += 1
+            i = 0
+            while(week[i] != 0):
+                week[i] = i + 1
+                i += 1
+            w = [0] *(7-i) + week[:i]
+            day = w[weekday]
+
+
 
     # Return the date
     r = datetime.datetime(year, month, day)
@@ -137,6 +148,7 @@ def plot_daily_array( data_array, params):
     start = params["start"]
     end = params["end"]
     algnWk = params["alignWeek"]
+    compareDaily = params["compareDaily"]
 
     # find the number of trading days
     num_trading_days = get_num_of_trading_days(start, end)
@@ -170,16 +182,26 @@ def plot_daily_array( data_array, params):
     mn = []
     mx = []
     line_points = []
- 
+    upC = 0
+    downC =  0
+    total = 0
     x_values = list(range(1, num_trading_days+1))  # x-values for each array (1, 2, ..., 12)
     for key in year_dict.keys():
         array = pd.DataFrame(year_dict[key])
        
      #   y_values = array["Close"].to_list()
 
-        open_price = array["Open"][0]
         close_array = np.array(array["Close"].to_list())
-        close_array = (close_array - open_price)*100/open_price    # percentage compare to first open price
+        if compareDaily:
+            open_array = np.array(array["Open"].to_list())
+            difference = (close_array - open_array)
+            upC += np.sum(difference > 0)
+            downC += np.sum(difference < 0)
+            total += len(difference)
+            close_array = difference/open_array*100
+        else:
+            open_price = array["Open"][0]
+            close_array = (close_array - open_price)*100/open_price    # percentage compare to first open price
         y_values = np.round(close_array, 2).tolist()
         line_points.append(y_values)
         # Plot image
@@ -222,7 +244,10 @@ def plot_daily_array( data_array, params):
     plt.ylim( np.min(year_list) -20, np.max(year_list) + 20)
 
     # Step 3: Customize the plot
-    plt.title(f"Line Plot of {ticker.upper()} for the past {len(year_dict)} years")
+    if compareDaily:
+        plt.title(f"Line Plot of {ticker.upper()} for the past {len(year_dict)} years, compared Daily {upC}/{downC} ({upC/total*100:.2f}%/{downC/total*100:.2f}%)")
+    else:
+        plt.title(f"Line Plot of {ticker.upper()} for the past {len(year_dict)} years, compare to the Start Date")
     plt.xlabel(f'Days from {start.strftime("%m-%d")} to {end.strftime("%m-%d")}')
     plt.text(  np.max(year_list)/2, -30, f'Week Day Aligned: { "Yes" if algnWk else "No"}', color='r', verticalalignment='top', horizontalalignment='center', fontsize=12)
     plt.ylabel('Price % range')
@@ -270,7 +295,7 @@ def plot_date_range(params):
     # limit data up to the last 10 years
     stock_daily = filtered_daily_dict[0:5*52*10]   
 
-    plot_daily_array( stock_daily, { "ticker" : ticker, "start": start, "end": last_day , "alignWeek": params["alignWeek"] or False})
+    plot_daily_array( stock_daily, { "ticker" : ticker, "start": start, "end": last_day , "alignWeek": params["alignWeek"] or False, "compareDaily": param["compare_range"]=="daily" })
  
     plt.axhline(0, color='grey', linestyle='-', linewidth=1)
     plt.axhline(5, color='grey', linestyle='--', linewidth=1, label=f'5%')
@@ -318,10 +343,14 @@ def on_hover(sel):
 if __name__ == "__main__":
     from mplcursors import cursor , HoverMode
     param = {}
-    param["ticker"] = 'GLD'
-    param["start"] = '2025-1-12'
-    param["end"] = '2025-2-21'
+    param["ticker"] = 'iwm'
+    param["start"] = '2021-3-1'
+    param["end"] = '2021-3-31'
     param["alignWeek"] = False
+#    param["alignWeek"] = True
+#    param["compare_range"] = "range"
+    param["compare_range"] = "daily"
+ 
 
     plt.figure(figsize=(16, 6))
     # Display the plot
