@@ -56,13 +56,13 @@ def plot_daily(ticker, length = 25):  # length is number of years
 
     
 
-    plt.text( mean, -12, f'{mean:.2f}%', color='r', verticalalignment='top', horizontalalignment='center', fontsize=10)
-    plt.text( mean + std_dev, -12, f' {mean + std_dev:.2f}%', color='b', verticalalignment='top', horizontalalignment='center', fontsize=10)
-    plt.text( mean - std_dev, -12, f' {mean - std_dev:.2f}%', color='b', verticalalignment='top', horizontalalignment='center', fontsize=10)
-    plt.text(  mean + 2 * std_dev, -12, f'{mean + 2 * std_dev:.2f}%', color='orange', verticalalignment='top', horizontalalignment='center', fontsize=10)
-    plt.text(  mean - 2 * std_dev, -12, f'{mean - 2 * std_dev:.2f}%', color='orange', verticalalignment='top', horizontalalignment='center', fontsize=10)
-    plt.text(  pavg, -20, f'{pavg:.2f}%', color='grey', verticalalignment='top', horizontalalignment='center', fontsize=10)
-    plt.text(  navg, -20, f'{navg:.2f}%', color='grey', verticalalignment='top', horizontalalignment='center', fontsize=10)
+    plt.text( mean, -15, f'{mean:.2f}%', color='r', verticalalignment='top', horizontalalignment='center', fontsize=10)
+    plt.text( mean + std_dev + 0.25, -15, f' {mean + std_dev:.2f}%', color='b', verticalalignment='top', horizontalalignment='center', fontsize=10)
+    plt.text( mean - std_dev - 0.25, -15, f' {mean - std_dev:.2f}%', color='b', verticalalignment='top', horizontalalignment='center', fontsize=10)
+    plt.text(  mean + 2 * std_dev + 0.45, -15, f'{mean + 2 * std_dev:.2f}%', color='orange', verticalalignment='top', horizontalalignment='center', fontsize=10)
+    plt.text(  mean - 2 * std_dev - 0.45, -15, f'{mean - 2 * std_dev:.2f}%', color='orange', verticalalignment='top', horizontalalignment='center', fontsize=10)
+    plt.text(  pavg, -25, f'{pavg:.2f}%', color='grey', verticalalignment='top', horizontalalignment='center', fontsize=10)
+    plt.text(  navg, -25, f'{navg:.2f}%', color='grey', verticalalignment='top', horizontalalignment='center', fontsize=10)
 
     plt.text(   -5, -25, f'Within 1% {onePercent.size*100/sorted_data.size:.2f}%', color='grey', verticalalignment='top', horizontalalignment='center', fontsize=10)
     plt.text(   5, -25, f'Within 2% {twoPercent.size*100/sorted_data.size:.2f}%', color='grey', verticalalignment='top', horizontalalignment='center', fontsize=10)
@@ -75,7 +75,7 @@ def plot_daily(ticker, length = 25):  # length is number of years
     print(f"{ticker.upper()}({mean:.2f}, {mean + std_dev:.2f}/{mean - std_dev:.2f}, avg:{pavg:.2f}/{navg:.2f}, median: {upM:.2f}/{dwnM:.2f},  UP/DOWN: {upC/len(sorted_data)*100: .1f}%/{dwnC/len(sorted_data)*100:.1f}%)")
 
 if __name__ == "__main__":
-    ticker = 'qqq'
+    ticker = 'spy'
     plt.figure(figsize=(10, 6))
     # Display the plot
     plot_daily(ticker, 10)
